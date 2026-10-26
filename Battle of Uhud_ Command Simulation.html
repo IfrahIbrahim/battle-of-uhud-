@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Battle of Uhud: Command Simulation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#f1ece0;--panel:#fffdf7;--ink:#26221b;--mute:#6b6354;--line:#d8cfba;--sky:#e6dcc3;--mtn:#8c5a43;--hill:#b59a6a;--sand:#e0cfa3;--green:#2a7a55;--red:#a8402f;--gold:#d29b1c;--ok:#1f6b47;--bad:#a8402f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b2229;--panel:#242d36;--ink:#ece6d6;--mute:#a79f8d;--line:#3a4652;--sky:#2e3a45;--mtn:#6d4636;--hill:#6f6246;--sand:#4a4636;--green:#4cb386;--red:#e0705c;--gold:#e8b53c;--ok:#6fd0a0;--bad:#f08b78}}
+:root[data-theme="dark"]{--bg:#1b2229;--panel:#242d36;--ink:#ece6d6;--mute:#a79f8d;--line:#3a4652;--sky:#2e3a45;--mtn:#6d4636;--hill:#6f6246;--sand:#4a4636;--green:#4cb386;--red:#e0705c;--gold:#e8b53c;--ok:#6fd0a0;--bad:#f08b78}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.55 "Alegreya Sans",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:20px 16px 40px}
+h1{font:700 clamp(28px,5vw,40px)/1.1 Alegreya,Georgia,serif;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 14px}
+.field{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--sky)}
+svg{display:block;width:100%;height:auto}
+.mv{transition:transform 1.6s ease-in-out,opacity 1.2s}
+.d{transition:transform 1.2s ease-in-out,opacity 1s}
+.steps{display:flex;gap:6px;margin:12px 0}
+.steps i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.steps i.on{background:var(--gold)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px 20px}
+.panel h2{font:700 24px/1.2 Alegreya,Georgia,serif;margin:0 0 8px}
+.panel p{margin:0 0 10px;max-width:68ch}
+.opts{display:grid;gap:10px;margin-top:12px}
+button{font:500 17px/1.3 "Alegreya Sans",system-ui,sans-serif;color:var(--ink);background:transparent;border:1.5px solid var(--ink);border-radius:5px;padding:11px 14px;text-align:left;cursor:pointer}
+button:hover{background:var(--sand)}button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button.go{background:var(--ink);color:var(--panel);text-align:center;font-weight:700}
+button.go:hover{opacity:.88;background:var(--ink)}
+button:disabled{opacity:.55;cursor:default}
+.fb{border-left:4px solid var(--gold);padding:8px 12px;margin:12px 0 0;background:var(--sand)}
+.fb.ok{border-color:var(--ok)}.fb.bad{border-color:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:15px;color:var(--mute);margin:8px 0 0}
+.legend b{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+input[type=range]{width:100%;accent-color:var(--gold);margin:10px 0}
+.big{font:700 38px/1 Alegreya,Georgia,serif}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.tally{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+.tally div{border:1px solid var(--line);border-radius:5px;padding:8px 10px}
+.tally span{display:block;color:var(--mute);font-size:14px}
+.q{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+@media(prefers-reduced-motion:reduce){.mv,.d{transition:none}}
+</style></head>
+<body><div class="wrap">
+<h1>The Battle of Uhud</h1>
+<p class="sub">Shawwal 3 AH (625 CE) · You are advising the Muslim army outside Madinah</p>
+<div class="field"><svg viewBox="0 0 700 380" role="img" aria-label="Battlefield map of Uhud">
+<rect width="700" height="380" fill="var(--sky)"/>
+<polygon points="0,0 700,0 700,70 560,40 420,80 300,30 150,75 0,50" fill="var(--mtn)"/>
+<text x="350" y="22" text-anchor="middle" font-size="15" fill="var(--panel)" font-family="Alegreya Sans,sans-serif">Mount Uhud</text>
+<polygon points="70,150 110,85 170,80 215,150" fill="var(--hill)"/>
+<text x="142" y="172" text-anchor="middle" font-size="13" fill="var(--ink)" font-family="Alegreya Sans,sans-serif">Archers’ Hill</text>
+<text x="350" y="372" text-anchor="middle" font-size="13" fill="var(--mute)" font-family="Alegreya Sans,sans-serif">Madinah lies to the south ↓</text>
+<g id="loot" class="d" opacity="0"><circle cx="470" cy="330" r="11" fill="var(--gold)"/><text x="470" y="334" text-anchor="middle" font-size="11" fill="#26221b" font-weight="700">$</text></g>
+<g id="Q" class="mv"></g><g id="M" class="mv"></g><g id="A"></g>
+<g id="C" class="mv" opacity="0" style="transform:translate(0,0)"></g>
+</svg></div>
+<div class="legend"><span><b style="background:var(--green)"></b>Muslim army (each dot ≈ 50 men)</span><span><b style="background:var(--red)"></b>Quraysh army</span><span><b style="background:var(--gold)"></b>Archers (each dot = 5)</span></div>
+<div class="steps" id="steps"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="panel" id="panel" aria-live="polite"></div>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg",$=id=>document.getElementById(id);
+function dot(g,x,y,r,f,cls){const c=document.createElementNS(NS,"circle");c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r",r);c.setAttribute("fill",f);if(cls)c.setAttribute("class",cls);g.appendChild(c);return c}
+const Md=[],Ad=[];
+for(let i=0;i<14;i++)Md.push(dot($("M"),270+(i%7)*28,150+Math.floor(i/7)*24,9,"var(--green)","d"));
+for(let i=0;i<18;i++)dot($("Q"),270+(i%6)*30,275+Math.floor(i/6)*22,9,"var(--red)");
+for(let i=0;i<10;i++)Ad.push(dot($("A"),95+(i%5)*24,112+Math.floor(i/5)*20,7,"var(--gold)","d"));
+for(let i=0;i<6;i++){const r=document.createElementNS(NS,"rect");r.setAttribute("x",600+(i%3)*22);r.setAttribute("y",325+Math.floor(i/3)*18);r.setAttribute("width",16);r.setAttribute("height",11);r.setAttribute("rx",3);r.setAttribute("fill","var(--red)");r.setAttribute("stroke","var(--ink)");$("C").appendChild(r)}
+const tr=(el,x,y)=>el.style.transform=`translate(${x}px,${y}px)`;
+let step=0,hold=null,drop=40,qs=0;
+const P=$("panel");
+function bar(n){[...$("steps").children].forEach((e,i)=>e.className=i<=n?"on":"")}
+function fb(t,c){return `<div class="fb ${c||""}">${t}</div>`}
+function opts(list,fn){return `<div class="opts">${list.map((t,i)=>`<button onclick="${fn}(${i})">${t}</button>`).join("")}</div>`}
+function show(){bar(step);
+if(step==0)P.innerHTML=`<h2>Your mission</h2><p>One year after the Battle of Badr, Quraysh want revenge. Abu Sufyan has gathered about <b>3,000</b> fighters, including the cavalry of Khalid ibn al-Walid. They are marching on Madinah.</p><p>You will make three decisions. Each one is a point where the real battle turned. Make your choices, then see what really happened.</p><button class="go" onclick="next()">Begin</button>`;
+if(step==1)P.innerHTML=`<h2>Decision 1: Where should we fight?</h2><p>The Prophet Muhammad ﷺ gathers his companions for <i>shura</i> (consultation). He prefers to defend inside Madinah, where the narrow streets would help. Many younger men want to meet the enemy in the open.</p>${opts(["Defend inside Madinah","March out to Mount Uhud"],"d1")}<div id="o"></div>`;
+if(step==2)P.innerHTML=`<h2>Decision 2: Orders for the archers</h2><p>About <b>700</b> men march out (300 turned back with Abdullah ibn Ubayy). The army sets its back to Mount Uhud. A gap in the rear is guarded only by <b>50 archers</b> on the hill, led by Abdullah ibn Jubayr. What is their order?</p>${opts(["Hold this hill. Do not leave, even if you see us win or lose.","Stay until victory looks certain, then join the army."],"d2")}<div id="o"></div>`;
+if(step==3)P.innerHTML=`<h2>The battle begins</h2><p>The armies clash. The Muslims fight bravely, and Quraysh fall back in disorder. Their camp is left behind, full of supplies and treasure. Press the button to watch.</p><button class="go" onclick="fight()">Start the clash</button>`;
+if(step==4)P.innerHTML=`<h2>Decision 3: The archers see victory</h2><p>Quraysh are running. Some archers shout, “The enemy is beaten! Let us collect the spoils!” Abdullah ibn Jubayr reminds them of the Prophet’s order. You decide how many archers go down.</p><div class="row"><span>Archers leaving the hill</span><span class="big" id="n">${drop}</span></div><input type="range" min="0" max="50" step="5" value="${drop}" id="sl" aria-label="Number of archers leaving the hill" oninput="setDrop(this.value)"><button class="go" onclick="resolve()">Confirm and watch</button>`;
+if(step==5)result();}
+function next(){step++;show();if(step==4)setDrop(drop)}
+function d1(i){const o=$("o");o.innerHTML=fb(i==0?"A sensible plan. The Prophet ﷺ himself favoured it. But after the discussion most of the community wanted to go out, and he accepted their view. This is a lesson in shura: leaders listen. The army marched to Uhud.":"This matches the decision taken after shura. The Prophet ﷺ had preferred to stay, but he respected the majority and led the army out. Once decided, he trusted in Allah and went forward.","ok")+`<br><button class="go" onclick="next()">Continue</button>`;lock()}
+function d2(i){hold=i==0;$("o").innerHTML=fb(hold?"Correct. This is the order the Prophet ﷺ actually gave: stay at your post whatever happens. The hill protected the army’s back from Khalid’s cavalry.":"Risky. The real order was stronger: do not leave, whether you see us win or lose. “Until victory is certain” is the kind of loophole that tempts tired, excited soldiers.",hold?"ok":"bad")+`<br><button class="go" onclick="next()">Continue</button>`;lock()}
+function lock(){P.querySelectorAll(".opts button").forEach(b=>b.disabled=true)}
+function fight(){tr($("M"),0,50);tr($("Q"),200,45);$("Q").style.opacity=.5;$("loot").style.opacity=1;P.querySelector("button").disabled=true;setTimeout(()=>{step=4;show();setDrop(drop)},2000)}
+function setDrop(v){drop=+v;const n=$("n");if(n)n.textContent=drop;const k=Math.round(drop/5);Ad.forEach((c,i)=>{c.style.transform=i<k?"translate(250px,200px)":"translate(0,0)"})}
+function resolve(){const c=$("C"),cv=$("C").parentNode;P.querySelector("button").disabled=true;P.querySelector("input").disabled=true;c.style.opacity=1;setTimeout(()=>tr(c,-420,-150),100);
+const lost=drop<=10?1:drop<=35?6:10;
+setTimeout(()=>{if(drop<=10){tr(c,-60,40);c.style.opacity=0}else{Md.forEach((m,i)=>{if(i<lost)m.style.opacity=.15})}},2000);
+setTimeout(()=>{step=5;show()},3700)}
+function result(){const k=drop;let t,h,c;
+if(k<=10){h="The hill holds";t="With most archers staying, Khalid’s cavalry is driven back. In real life this did not happen, but it shows how much depended on obedience.";c="ok"}
+else if(k<=35){h="The army is split";t="Too few archers remain to stop the cavalry. Khalid breaks through and attacks the Muslims from behind. The army is thrown into confusion.";c="bad"}
+else{h="The same as real history";t="Only about ten archers stayed with Abdullah ibn Jubayr, who held to his orders and was martyred. Khalid’s cavalry swept around the hill and struck from behind.";c="bad"}
+P.innerHTML=`<h2>${h}</h2>${fb(t,c)}
+<p style="margin-top:12px"><b>What really happened:</b> About 70 Muslims were martyred, including the Prophet’s uncle Hamza ibn Abdul-Muttalib and Mus‘ab ibn Umair. The Prophet ﷺ was wounded. Rumours that he had died spread, but companions such as Talha and Abu Dujana shielded him. Quraysh did not capture Madinah, and the Muslims regrouped on the mountain.</p>
+<p><b>Lessons:</b> obedience to leadership, discipline over greed, patience after a setback, and shura even when the outcome is hard.</p>
+<div class="q" id="q"></div>`;quiz()}
+const Q=[["Who led the 50 archers on the hill?",["Abdullah ibn Jubayr","Hamza","Khalid ibn al-Walid"],0],["Why did the Muslim army lose its advantage?",["Their swords broke","Most archers left their post for spoils","Madinah’s gates closed"],1],["Which commander led the cavalry round the hill?",["Abu Sufyan","Abu Dujana","Khalid ibn al-Walid"],2]];
+function quiz(){const q=$("q");if(qs>=Q.length){q.innerHTML=`<b>Quiz complete.</b><div class="tally"><div><span>Archers who left</span>${drop} of 50</div><div><span>Orders given</span>${hold?"Hold the hill":"Conditional"}</div><div><span>Score</span>${sc} / 3</div></div><button class="go" onclick="restart()">Play again</button>`;return}
+const [t,o,a]=Q[qs];q.innerHTML=`<b>Quick check ${qs+1} of 3: ${t}</b>${opts(o,"ans")}<div id="r"></div>`}
+let sc=0;
+function ans(i){const ok=i==Q[qs][2];if(ok)sc++;lock();$("r").innerHTML=fb(ok?"Correct.":"Not quite. The answer is “"+Q[qs][1][Q[qs][2]]+"”.",ok?"ok":"bad")+`<br><button class="go" onclick="qs++;quiz()">${qs<2?"Next question":"See summary"}</button>`}
+function restart(){step=0;hold=null;drop=40;qs=0;sc=0;tr($("M"),0,0);tr($("Q"),0,0);$("Q").style.opacity=1;$("loot").style.opacity=0;const c=$("C");c.style.opacity=0;tr(c,0,0);Md.forEach(m=>m.style.opacity=1);Ad.forEach(a=>a.style.transform="translate(0,0)");show()}
+show();
+</script></body></html>
